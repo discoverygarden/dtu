@@ -1,0 +1,436 @@
+<?php
+
+define('CONFERENCE_CMODEL', 'dtu:conferenceCModel');
+define('CONFERENCE_COLLECTION_PID', 'dtu:conferences');
+define('CONTRIBUTION_CMODEL', 'dtu:contributionCModel');
+define('DOCUMENT_CMODEL', 'dtu:documentCModel');
+define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
+
+function dtu_init() {
+  drupal_add_js(drupal_get_path('module', 'dtu') . '/datatable/media/js/jquery.dataTables.min.js');
+  drupal_add_js(drupal_get_path('module', 'dtu') . '/js/dtu.js');
+  drupal_add_css(drupal_get_path('module', 'dtu') . '/datatable/media/css/jquery.dataTables.css');
+  
+  if (isset($_GET['conference'])) {
+    $_SESSION['conference'] = $_GET['conference'];
+  }
+  
+  if (isset($_GET['type'])) {
+    $_SESSION['document_type'] = $_GET['type'];
+  }
+  
+  if (isset($_GET['contribution'])) {
+    $_SESSION['contribution'] = $_GET['contribution'];
+  }
+}
+
+function dtu_menu() {
+  $items = array();
+  
+  $items['admin/conference/list'] = array(
+    'title' => t('Conferences'),
+    'page callback' => 'dtu_conference_list',
+    'access arguments' => array('administer conferences'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'conferences.inc',
+  );
+  $items['admin/conference/%/delete'] = array(
+    'title' => t('Delete Conference'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('dtu_conference_delete_form', 2),
+    'access arguments' => array('delete conference'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'conferences.inc',
+  );
+  $items['admin/conference/%/document/%'] = array(
+    'title' => t('Edit Conference Document'),
+    'page callback' => 'dtu_conference_document_form_redirect',
+    'page arguments' => array(2, 4),
+    'access arguments' => array('administer conference'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'conferences.inc',
+  );
+  $items['admin/conference/%/contributions'] = array(
+    'title' => t('Contributions'),
+    'page callback' => 'dtu_contribution_list',
+    'page arguments' => array(2),
+    'access arguments' => array('administer contributions'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'contributions.inc',
+  );
+  $items['admin/conference/%/contribution/%/document/%'] = array(
+    'title' => t('Edit Contribution Document'),
+    'page callback' => 'dtu_contribution_document_form_redirect',
+    'page arguments' => array(2, 4, 6),
+    'access arguments' => array('administer contributions'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'contributions.inc',
+  );
+  $items['admin/contribution/%/delete'] = array(
+    'title' => t('Contributions'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('dtu_contribution_delete_form', 2),
+    'access arguments' => array('delete contribution'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'contributions.inc',
+  );
+  return $items;
+}
+
+function dtu_theme($existing, $type, $theme, $path) {
+  return array(
+    'dtu_conference_admin_list' => array(
+      'path' => drupal_get_path('module', 'dtu') . '/templates',
+      'arguments' => array(
+        'conferences' => NULL,
+        'add_conference' => NULL,
+      ),
+      'template' => 'dtu-conferences-admin-list',
+    ),
+    'dtu_contribution_admin_list' => array(
+      'path' => drupal_get_path('module', 'dtu') . '/templates',
+      'arguments' => array(
+        'contributions' => NULL,
+        'add_contribution' => NULL,
+      ),
+      'template' => 'dtu-contributions-admin-list',
+    ),
+  );
+}
+
+//
+// @TODO: implement hook perm
+//
+function dtu_perm() {
+  return array(
+    'administer conferences',
+    'administer contributions',
+    'delete conference',
+  );
+}
+
+function dtu_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'fedora_repository_ingest_form') {
+    if ($form_state['storage']['step'] == 2) {
+      $form['#validate'][] = 'dtu_conf_validate';
+    }
+    
+  }
+  
+  if (is_array($form['TracksSessions']['SuperEvent']['Track']['Title'])) {
+  //  $form['TracksSessions']['SuperEvent']['Track']['Title']['#default_value'] = ;
+      $form['TracksSessions']['SuperEvent']['Track']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'tra');
+  }
+  if (is_array($form['TracksSessions']['SuperEvent']['Session']['Title'])) {
+      //unset($form['TracksSessions']['SuperEvent']['Session']['Title']['#default_value']);
+     
+     $key = $form['TracksSessions']['SuperEvent']['Session']['Acronym']['#default_value'] . '--delim--' . $form['TracksSessions']['SuperEvent']['Session']['Title']['#default_value'];
+    
+     $form['TracksSessions']['SuperEvent']['Session']['Title']['#default_value'] = $key;
+     $form['TracksSessions']['SuperEvent']['Session']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'ses');
+  }
+}
+
+function dtu_conf_validate($form, &$form_state) {
+  if ($form_state['values']['dsid'] == 'MXE') {
+    if (!empty($form_state['values']['PrimaryInformation']['DateParent']['DateFrom'])) {
+      $from = $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'];
+      
+      $from_explode = explode("-", $from);
+      
+      if (is_numeric($from_explode[0]) && strlen($from_explode[0]) == 4) {
+        $form_state['values']['PrimaryInformation']['DateParent']['Year'] = $from_explode[0];
+        $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'] = $from_explode[2] . '-' . $from_explode[1] . '-' . $from_explode[0];
+      }
+    }
+    
+    // reformat to dd-mm-yyyy
+    $to = $form_state['values']['PrimaryInformation']['DateParent']['DateTo'];
+    $to_explode = explode('-', $to);
+    if (!empty($to) && strlen($to_explode[0]) == 4) {
+      $form_state['values']['PrimaryInformation']['DateParent']['DateTo'] = $to_explode[2] . '-' . $to_explode[1] . '-' . $to_explode[0];
+    }
+  }
+  
+  if ($form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']) {
+    $ses_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']);
+    $form_state['values']['TracksSessions']['SuperEvent']['Session'] = '';
+    $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title'] = $ses_val[1];
+    $form_state['values']['TracksSessions']['SuperEvent']['Session']['Acronym'] = $ses_val[0];
+  }
+  
+  if ($form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']) {
+    $track_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']);
+    $form_state['values']['TracksSessions']['SuperEvent']['Track'] = '';
+    $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title'] = $track_val[1];
+    $form_state['values']['TracksSessions']['SuperEvent']['Track']['Acronym'] = $track_val[0];
+  }
+  
+  
+  // Handle file uploads
+  $validators = array();
+ 
+  $ifl = 'ingest-file-location';
+  $fileObject = NULL;
+  //Check if it's already there; this is what upload_element provides.
+  if (is_a($form_state['values']['RepositoryFile'][$ifl], 'stdClass') && property_exists($form_state['values']['RepositoryFile'][$ifl], '')) {
+    $fileObject = $form_state['values']['RepositoryFile'][$ifl];
+  }
+  elseif (!empty($_FILES['files']['name']['RepositoryFile'])) {
+    $fileObject = file_save_upload('RepositoryFile', $validators);
+  }
+
+  if ($fileObject !== NULL && property_exists($fileObject, 'filepath')) {
+    file_move($fileObject->filepath, 0, 'FILE_EXISTS_RENAME');
+    $form_state['values'][$ifl] = $fileObject->filepath;
+  }
+        
+  if (!empty($form_state['values']['RepositoryFile']['PullURL'])) {
+    $data = file_get_contents($form_state['values']['RepositoryFile']['PullURL']);  //@TODO: validate URL
+  }
+}
+
+function dtu_islandora_content_model_forms_post_ingest($object) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  $rels = $object->get_rdf_relationships();
+             
+  // Conference cmodel
+  if (in_array(CONFERENCE_CMODEL, $rels['fedora-model:hasModel'])) {
+    //$object->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    
+    // Create Contributions collection
+    $contributions = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Contributions', $owner = '');
+    $contributions->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    $contributions->add_relationship('isMemberOfCollection', $object->pid);
+    $contributions->add_relationship('contributionCollection', $object->pid);
+    $collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
+  <content_models>
+    <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
+    <content_model dsid="ISLANDORACM" name="Contribution CModel" namespace="default:1" pid="islandora:dtuContributionCmodel"></content_model>
+  </content_models>
+  <search_terms></search_terms>
+  <staging_area></staging_area>
+  <relationship>isMemberOfCollection</relationship>
+</collection_policy>';
+
+  $contributions->add_datastream_from_string($collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
+  
+    $documents = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Documents', $owner = '');
+    $documents->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    $documents->add_relationship('isMemberOfCollection', $object->pid);
+    $documents->add_relationship('documentCollection', $object->pid);
+    $document_collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
+  <content_models>
+    <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
+    <content_model dsid="ISLANDORACM" name="Document CModel" namespace="default:1" pid="islandora:dtuDocumentCmodel"></content_model>
+  </content_models>
+  <search_terms></search_terms>
+  <staging_area></staging_area>
+  <relationship>isMemberOfCollection</relationship>
+</collection_policy>';
+
+ $documents->add_datastream_from_string($document_collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
+  }
+  
+  // Contribution cmodel
+  if (in_array(CONTRIBUTION_CMODEL, $rels['fedora-model:hasModel'])) {
+    $container_collection = new Fedora_Item(arg(2));
+    $rels_ext = $container_collection->get_rdf_relationships();
+    $conf_pid = $rels_ext['isMemberOfCollection'][0];
+    
+    if ($conf_pid) {
+      $object->add_relationship('isMemberOfCollection', $conf_pid);
+    }
+  }
+  
+  // Document cmodel
+  if (in_array(DOCUMENT_CMODEL, $rels['fedora-model:hasModel'])) {
+    $conf = $_SESSION['conference'];
+    $type = $_SESSION['document_type'];
+    
+    if ($conf) {
+      $object->add_relationship('isMemberOfCollection', $conf);
+    }
+    
+    if (isset($_SESSION['contribution'])) {
+      $conf = $_SESSION['contribution'];
+      $contrib = $conf;
+      unset($_SESSION['contribution']);
+    }
+    
+    if (isset($conf) && isset($type)) {
+      $parent = new Fedora_Item($conf); // @TODO: validate
+      $mxe = $parent->get_datastream_dissemination('MXE');
+      
+      $mxe_xml = new SimpleXMLElement($mxe);
+      
+      if (!$mxe_xml->documents) {
+        $mxe_xml->addChild('documents');
+      }
+      $doc = $mxe_xml->documents->addChild('document');
+      $doc->addAttribute('id', $object->pid);
+      $doc->addAttribute('role', $type); //@TODO: validate
+      $doc->addAttribute('access', 'oa');
+      
+      $doc->addChild('description', ucfirst($type));
+      $doc->addChild('uri', REPO_URL . $object->pid);
+      $parent->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
+      
+      unset($_SESSION['conference']);
+      unset($_SESSION['document_type']);
+    }
+  }
+  
+}
+
+function dtu_get_conferences() {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_utils');
+  $query_string = "select \$object \$title from <#ri>
+    where \$object <dc:title> \$title
+    and \$object <fedora-model:state> <info:fedora/fedora-system:def/model#Active>
+    and \$object <fedora-model:hasModel> <info:fedora/" . CONFERENCE_CMODEL . ">
+    order by \$object";
+    
+  $query_string = urlencode($query_string);
+
+  $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
+  $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
+  $content = do_curl($url);
+  
+  $results = simplexml_load_string($content);
+  
+  $object_info = array();
+  foreach ($results->results->result AS $result) {
+    $pid = (string) $result->object['uri'][0];
+    $pid = preg_replace('/^info:fedora\//', '', $pid);
+    $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
+  }
+  
+  return $object_info;
+}
+
+function dtu_get_contributions($pid) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_utils');
+  $query_string = "select \$object \$title from <#ri>
+    where \$object <dc:title> \$title
+    and \$object <fedora-model:state> <info:fedora/fedora-system:def/model#Active>
+    and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
+    and \$object <fedora-model:hasModel> <info:fedora/" . CONTRIBUTION_CMODEL . ">
+    order by \$object";
+    
+  $query_string = urlencode($query_string);
+
+  $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
+  $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
+  $content = do_curl($url);
+  
+  $results = simplexml_load_string($content);
+  
+  $object_info = array();
+  foreach ($results->results->result AS $result) {
+    $pid = (string) $result->object['uri'][0];
+    $pid = preg_replace('/^info:fedora\//', '', $pid);
+    $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
+  }
+  
+  return $object_info;
+}
+
+function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  
+  $tracks = array();
+  
+  $conf_pid = $_GET['conf'];
+  
+  if (is_null($conf_pid)) {
+    $cont = new Fedora_Item($pid);
+    $rels_ext = $cont->get_rdf_relationships();
+    $conf_pid = $rels_ext['fedora:isMemberOfCollection'][1];
+    
+  }
+  $conf = new Fedora_Item($conf_pid);
+  
+  if ($conf) {
+    $mxe = $conf->get_datastream_dissemination('MXE');
+    $mxe_xml = simplexml_load_string($mxe);
+  
+    if ($mxe_xml) {
+      $tracks_query = $mxe_xml->xpath('//sub_events/sub_event[@event_type="' . $type .'"]');
+      foreach ($tracks_query AS $track) {
+        $key = (string) $track->acronym . '--delim--' . (string) $track->title;
+        $tracks[$key] = (string) $track->title; 
+      }
+    }
+  }
+  
+  return $tracks;
+}
+
+/**
+ * 
+ * @param string $pid
+ * @param boolean $delete_tree
+ *   TRUE if all child objects should also be deleted
+ */
+function dtu_delete_conference($pid, $delete_tree = TRUE) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  
+  if ($delete_tree) {
+    $contributions = dtu_get_contributions($pid);
+    foreach ($contributions AS $contribution) {
+      dtu_delete_contribution($contribution);
+    }
+  }
+  
+  // Delete conference
+  $item = new Fedora_Item($pid);
+  $item->purge('Purged via dtu module');
+}
+
+function dtu_delete_contribution($pid) {
+  $documents = dtu_get_contribution_documents($pid);
+  
+  foreach ($documents AS $document) {
+    dtu_delete_document($document);
+  }
+  
+  // Delete contribution
+  $item = new Fedora_Item($pid);
+  $item->purge('Purged via dtu module');
+}
+
+function dtu_delete_document($pid) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  
+  // Delete document
+  $item = new Fedora_Item($pid);
+  $item->purge('Purged via dtu module');
+}
+
+function dtu_get_contribution_documents($pid) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_utils');
+  $query_string = "select \$object \$title from <#ri>
+    where \$object <dc:title> \$title
+    and \$object <fedora-model:state> <info:fedora/fedora-system:def/model#Active>
+    and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
+    and \$object <fedora-model:hasModel> <info:fedora/" . DOCUMENT_CMODEL . ">
+    order by \$object";
+    
+  $query_string = urlencode($query_string);
+
+  $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
+  $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
+  $content = do_curl($url);
+  
+  $results = simplexml_load_string($content);
+  
+  $object_info = array();
+  foreach ($results->results->result AS $result) {
+    $pid = (string) $result->object['uri'][0];
+    $pid = preg_replace('/^info:fedora\//', '', $pid);
+    $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
+  }
+  
+  return $object_info;
+}
