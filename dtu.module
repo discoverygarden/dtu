@@ -1,9 +1,9 @@
 <?php
 
-define('CONFERENCE_CMODEL', 'dtu:conferenceCModel');
-define('CONFERENCE_COLLECTION_PID', 'dtu:conferences');
-define('CONTRIBUTION_CMODEL', 'dtu:contributionCModel');
-define('DOCUMENT_CMODEL', 'dtu:documentCModel');
+define('CONFERENCE_CMODEL', 'islandora:dtuConferenceCmodel');
+define('CONFERENCE_COLLECTION_PID', 'islandora:296');
+define('CONTRIBUTION_CMODEL', 'islandora:dtuContributionCmodel');
+define('DOCUMENT_CMODEL', 'islandora:dtuDocumentCmodel');
 define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
 
 function dtu_init() {
@@ -192,6 +192,7 @@ function dtu_conf_validate($form, &$form_state) {
 
 function dtu_islandora_content_model_forms_post_ingest($object) {
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  //sleep(10);
   $rels = $object->get_rdf_relationships();
              
   // Conference cmodel
@@ -433,4 +434,51 @@ function dtu_get_contribution_documents($pid) {
   }
   
   return $object_info;
+}
+
+function dtu_islandora_object_event($function, $parameters, $result) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  
+  switch($function) {
+    
+    case 'ingest':
+      if (isset($result->objectPID)) {
+        $object = new Fedora_Item($result->objectPID);
+        $rels = $object->get_rdf_relationships();
+        
+        // Conference has been ingested
+        if (in_array(CONFERENCE_CMODEL, $rels['fedora-model:hasModel'])) {
+          
+        }
+        
+        // Contribution has been ingested
+        if (in_array(CONTRIBUTION_CMODEL, $rels['fedora-model:hasModel'])) {
+          
+        }
+        
+        // Document has been ingested
+        if (in_array(DOCUMENT_CMODEL, $rels['fedora-model:hasModel'])) {
+          
+        }
+      }
+      break;
+      
+    case 'modifyDatastreamByValue':
+      if (isset($parameters['pid'])) {
+        $object = new Fedora_Item($parameters['pid']);
+        $rels = $object->get_rdf_relationships();
+        
+        // Conference MXE updated
+        if (in_array(CONFERENCE_CMODEL, $rels['fedora-model:hasModel']) && $parameters['dsID'] == 'MXE') {
+          
+        }
+        
+        // Document DDF updated
+        if (in_array(DOCUMENT_CMODEL, $rels['fedora-model:hasModel']) && $parameters['dsID'] == 'DDF') {
+          
+        }
+      }
+      break;
+  }
+  watchdog('mitch-test', 'Function: ' . $function . ' Parameters: ' . print_r($parameters, TRUE) . ' Result: ' . print_r($result, TRUE));
 }
