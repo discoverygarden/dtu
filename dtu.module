@@ -197,7 +197,7 @@ function dtu_islandora_content_model_forms_post_ingest($object) {
   // Conference cmodel
   if (in_array(CONFERENCE_CMODEL, $rels['fedora-model:hasModel'])) {
     //$object->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
-    
+     $object->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');    
     // Create Contributions collection
     $contributions = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Contributions', $owner = '');
     $contributions->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
@@ -206,7 +206,7 @@ function dtu_islandora_content_model_forms_post_ingest($object) {
     $collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
   <content_models>
     <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
-    <content_model dsid="ISLANDORACM" name="Contribution CModel" namespace="default:1" pid="islandora:dtuContributionCmodel"></content_model>
+    <content_model dsid="ISLANDORACM" name="Contribution CModel" namespace="default:1" pid="dtu:contributionCModel"></content_model>
   </content_models>
   <search_terms></search_terms>
   <staging_area></staging_area>
@@ -214,6 +214,7 @@ function dtu_islandora_content_model_forms_post_ingest($object) {
 </collection_policy>';
 
   $contributions->add_datastream_from_string($collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
+  $contributions->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
   
     $documents = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Documents', $owner = '');
     $documents->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
@@ -222,7 +223,7 @@ function dtu_islandora_content_model_forms_post_ingest($object) {
     $document_collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
   <content_models>
     <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
-    <content_model dsid="ISLANDORACM" name="Document CModel" namespace="default:1" pid="islandora:dtuDocumentCmodel"></content_model>
+    <content_model dsid="ISLANDORACM" name="Document CModel" namespace="default:1" pid="dtu:documentCModel"></content_model>
   </content_models>
   <search_terms></search_terms>
   <staging_area></staging_area>
@@ -230,7 +231,8 @@ function dtu_islandora_content_model_forms_post_ingest($object) {
 </collection_policy>';
 
  $documents->add_datastream_from_string($document_collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
-  }
+ $documents->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M'); 
+ }
   
   // Contribution cmodel
   if (in_array(CONTRIBUTION_CMODEL, $rels['fedora-model:hasModel'])) {
