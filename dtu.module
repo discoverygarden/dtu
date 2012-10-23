@@ -156,6 +156,10 @@ function dtu_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
+function dtu_islandora_tabs_alter(&$tabs, $params) {
+  unset($tabs['add_tab']);
+}
+
 function dtu_islandora_content_model_forms_get_transforms() {
   $path = drupal_get_path('module', 'dtu');
 
