@@ -1,18 +1,18 @@
 <?php
-/*
+
 define('CONFERENCE_CMODEL', 'dtu:conferenceCModel');
 define('CONFERENCE_COLLECTION_PID', 'dtu:conferences');
 define('CONTRIBUTION_CMODEL', 'dtu:contributionCModel');
 define('DOCUMENT_CMODEL', 'dtu:documentCModel');
 define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
-*/
 
+/*
 define('CONFERENCE_CMODEL', 'islandora:dtuConferenceCmodel');
 define('CONFERENCE_COLLECTION_PID', 'islandora:296');
 define('CONTRIBUTION_CMODEL', 'islandora:dtuContributionCmodel');
 define('DOCUMENT_CMODEL', 'islandora:dtuDocumentCmodel');
 define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
-
+*/
 
 /**
  * Implementation of hook_init()
