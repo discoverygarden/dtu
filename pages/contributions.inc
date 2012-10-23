@@ -27,14 +27,14 @@ function dtu_contribution_list($pid) {
     $session = $mxe_xml->xpath('//super_events/super_event[@event_type="ses"]/title');
     $session = (string) $session[0];
     
-    $edit_link = l(t('Edit'), 'fedora/repository/' . $contribution['pid'], array('fragment' => 'tabset-1-tab-2'));
+    $edit_link = l(t('Edit'), 'fedora/repository/' . $contribution['pid'], array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     $delete_link = l(t('Delete'), 'admin/contribution/' . $contribution['pid'] . '/delete');
     
     $obj_link = l($item->objectProfile->objLabel, 'fedora/repository/' . $contribution['pid']);
     
     $paper = $mxe_xml->xpath('//documents/document[@role="paper"]');
     if ($paper) {
-      $paper_link = l(t('Edit'), 'fedora/repository/' . (string)$paper[0]->attributes()->id, array('fragment' => 'tabset-1-tab-2'));
+      $paper_link = l(t('Edit'), 'fedora/repository/' . (string)$paper[0]->attributes()->id, array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     }
     else {
       $paper_link = l(t('Add'), 'admin/conference/' . $conf_pid . '/contribution/' . $contribution['pid'] . '/document/paper');
@@ -42,7 +42,7 @@ function dtu_contribution_list($pid) {
     
     $slides = $mxe_xml->xpath('//documents/document[@role="slides"]');
     if ($slides) {
-      $slides_link = l(t('Edit'), 'fedora/repository/' . (string)$slides[0]->attributes()->id, array('fragment' => 'tabset-1-tab-2'));
+      $slides_link = l(t('Edit'), 'fedora/repository/' . (string)$slides[0]->attributes()->id, array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     }
     else {
       $slides_link = l(t('Add'), 'admin/conference/' . $conf_pid . '/contribution/' . $contribution['pid'] . '/document/slides');
@@ -50,7 +50,7 @@ function dtu_contribution_list($pid) {
     
     $video = $mxe_xml->xpath('//documents/document[@role="video"]');
     if ($video) {
-      $video_link = l(t('Edit'), 'fedora/repository/' . (string)$video[0]->attributes()->id, array('fragment' => 'tabset-1-tab-2'));
+      $video_link = l(t('Edit'), 'fedora/repository/' . (string)$video[0]->attributes()->id, array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     }
     else {
       $video_link = l(t('Add'), 'admin/conference/' . $conf_pid . '/contribution/' . $contribution['pid'] . '/document/video');
@@ -62,7 +62,7 @@ function dtu_contribution_list($pid) {
   $contributions_table = theme('table', $header, $rows);
   
   $contribution_collection_pid = dtu_get_contribution_collection($pid);
-  $add_contribution = l(t('Add contribution'), 'fedora/repository/' . $contribution_collection_pid, array('fragment' => 'add-tab', 'query' => array('conf' => $pid)));
+  $add_contribution = l(t('Add contribution'), 'fedora/repository/' . $contribution_collection_pid, array('query' => array('conf' => $pid, 'add_tab' => 'true'), 'fragment' => 'add-tab'));
   
   return theme('dtu_contribution_admin_list', $contributions_table, $add_contribution);
 }

@@ -16,7 +16,7 @@ function dtu_conference_list() {
     $year = (string) $mxe_xml->date->year;
     
     $obj_link = l($item->objectProfile->objLabel, 'fedora/repository/' . $conference['pid']);
-    $edit_link = l(t('Edit'), 'fedora/repository/' . $conference['pid'], array('fragment' => 'tabset-1-tab-2'));
+    $edit_link = l(t('Edit'), 'fedora/repository/' . $conference['pid'], array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     $delete_link = l(t('Delete'), 'admin/conference/' . $conference['pid'] . '/delete');
     $hide_link = l(t('Hide'), 'admin/conference/' . $conference['pid'] . '/hide');
     $contributions_link = l(t('Contributions'), 'admin/conference/' . $conference['pid'] . '/contributions');
@@ -25,7 +25,7 @@ function dtu_conference_list() {
     
     if ($program) {
       // Edit link
-      $prog_link = l(t('Edit'), 'fedora/repository/' . (string)$program[0]->attributes()->id, array('fragment' => 'tabset-1-tab-2'));
+      $prog_link = l(t('Edit'), 'fedora/repository/' . (string)$program[0]->attributes()->id, array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     }
     else {
       // Add link, send to the document sub-collection menu handler to avoid look-up here
@@ -36,7 +36,7 @@ function dtu_conference_list() {
     
     if ($proceedings) {
       // Edit link
-      $proc_link = l(t('Edit'), 'fedora/repository/' . (string) $proceedings[0]->attributes()->id, array('fragment' => 'tabset-1-tab-2'));
+      $proc_link = l(t('Edit'), 'fedora/repository/' . (string) $proceedings[0]->attributes()->id, array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
     }
     else {
       // Add link, send to the document sub-collection menu handler to avoid look-up here
@@ -58,7 +58,7 @@ function dtu_conference_list() {
   
   
   $conferences_table = theme('table', $header, $rows);
-  $add_conference = l(t('Add conference'), 'fedora/repository/' . CONFERENCE_COLLECTION_PID, array('fragment' => 'add-tab'));
+  $add_conference = l(t('Add conference'), 'fedora/repository/' . CONFERENCE_COLLECTION_PID, array('query' => array('add_tab' => 'true'), 'fragment' => 'add-tab'));
   
   return theme('dtu_conference_admin_list', $conferences_table, $add_conference);
 }
