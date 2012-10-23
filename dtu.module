@@ -134,6 +134,7 @@ function dtu_form_alter(&$form, &$form_state, $form_id) {
   //if ( $form_id == 'fedora_repository_ingest_form' && $form_state['storage']['step'] == 2) {
     $form['#validate'][] = 'dtu_conf_validate';
  // }
+  $form['#submit'][] = 'dtu_conf_submit';
   
   if (is_array($form['TracksSessions']['SuperEvent']['Track']['Title'])) {
     if (!empty($form['TracksSessions']['SuperEvent']['Track']['Acronym']['#default_value']) && !empty($form['TracksSessions']['SuperEvent']['Track']['Title']['#default_value'])) {
@@ -222,6 +223,12 @@ function dtu_conf_validate($form, &$form_state) {
         
   if (!empty($form_state['values']['RepositoryFile']['PullURL'])) {
     $data = file_get_contents($form_state['values']['RepositoryFile']['PullURL']);  //@TODO: validate URL
+  }
+}
+
+function dtu_conf_submit($form, &$form_state) {
+  if (!empty($form_state['values']['RepositoryTechnicalities']['ConferenceBaseURL'])) {
+    dtu_multisite_update($form_state['values']['pid'], $form_state['values']['RepositoryTechnicalities']['ConferenceBaseURL']);
   }
 }
 
@@ -507,4 +514,23 @@ function dtu_mxe_tidy(&$mxe_xml) {
   }
 
   return $modified;
+}
+
+
+function dtu_multisite_update($pid, $base_url) {
+  $multisite_exists = db_result(db_query("SELECT base_url FROM {dtu_multisite} WHERE pid = '%s'", $pid));
+  
+  $record = array('pid' => $pid, 'base_url' => $base_url);
+
+  // Multisite exists, determine if it should be updated
+  if ($multisite_exists) {
+    // Multisite needs to be updated
+    if ($multisite_exists != $base_url) {
+      drupal_write_record('dtu_multisite', $record, 'pid');        
+    }
+  }
+  // Multisite does not exist, create it
+  else {    
+    drupal_write_record('dtu_multisite', $record);
+  }
 }
