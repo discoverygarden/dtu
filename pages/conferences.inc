@@ -118,5 +118,5 @@ function dtu_conference_document_form_redirect($conf_pid, $document) {
     $pid = (string) $result->object['uri'][0];
     $pid = preg_replace('/^info:fedora\//', '', $pid);
   }
-  drupal_goto('fedora/repository/' . $pid, array('conference' => $conf_pid, 'type' => $document), 'add-tab');
+  drupal_goto('fedora/repository/' . $pid, array('add_tab' => 'true', 'conference' => $conf_pid, 'type' => $document), 'add-tab');
 }
