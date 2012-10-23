@@ -113,6 +113,13 @@ function dtu_theme($existing, $type, $theme, $path) {
       ),
       'template' => 'dtu-contributions-admin-list',
     ),
+    'dtu_conferences_list' => array(
+      'path' => drupal_get_path('module', 'dtu') . '/templates',
+      'arguments' => array(
+        'conferences' => NULL,
+      ),
+      'template' => 'dtu-conferences-list',
+    ),
   );
 }
 
@@ -125,6 +132,23 @@ function dtu_perm() {
     'administer contributions',
     'delete conference',
   );
+}
+
+function dtu_block($op, $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $block[0]['info'] = t('Conference List');
+      return $block;
+    case 'view':
+      switch ($delta) {
+        case 0:
+          module_load_include('inc', 'dtu', 'inc/conference_list');
+          $block['subject'] = t('Conference List');
+          $block['content'] = dtu_render_conference_block();
+          break;
+      }
+      return $block;
+  }
 }
 
 /**
