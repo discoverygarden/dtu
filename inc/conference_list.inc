@@ -5,7 +5,7 @@ function dtu_render_conference_block() {
 
   $conferences = dtu_get_conferences();
 
-  $header = array(t('Year'), t('Short Title'), t('Title'));
+  $header = array(t('Year'), t('Logo'), t('Short Title'), t('Title'));
   $rows = array();
   foreach ($conferences AS $conference) {
     $item = new Fedora_Item($conference['pid']);
@@ -17,11 +17,17 @@ function dtu_render_conference_block() {
 
     $link = 'fedora/repository/' . $conference['pid'];
 
-    //thumbnail
+    if (array_key_exists('TN', $item->datastreams)) {
+      $tn = theme_image('fedora/repository/' . $conference['pid'] . '/TN', t('Logo'), t('Logo'), NULL, FALSE);
+    }
+    else {
+      $tn = '';
+    }
+    
     $abbrev_link = l($abbrev_title, $link);
     $title_link = l($item->objectProfile->objLabel, $link);
 
-    $rows[] = array($year, $abbrev_link, $title_link);
+    $rows[] = array($year, $tn, $abbrev_link, $title_link);
   }
 
   $year = array();
