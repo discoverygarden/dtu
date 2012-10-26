@@ -8,7 +8,7 @@ class Document{
     $this->fedora_item = $fedora_item;
     $this->pid = $fedora_item->pid;
   }
-  
+
   public function create() {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
@@ -23,9 +23,11 @@ class Document{
     $mxe = $parent->get_datastream_dissemination('MXE');
       
     $mxe_xml = new SimpleXMLElement($mxe);
+    $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
 
     $ddf = $this->fedora_item->get_datastream_dissemination('DDF');
     $ddf_xml = new SimpleXMLElement($ddf);
+    $ddf_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
 
     $this->createEvents($mxe_xml, $ddf_xml, $_SESSION['contribution']);
     
@@ -34,6 +36,7 @@ class Document{
       $contribution = new Fedora_Item($_SESSION['contribution']);
       $mxe = $contribution->get_datastream_dissemination('MXE');
       $mxe_xml = new SimpleXMLElement($mxe);
+      $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
       $parent = $contribution;
       unset($_SESSION['contribution']);
     }
@@ -41,10 +44,10 @@ class Document{
     // Update conference/contribution if document is Program or Proceedings
     if (isset($type)) {
       
-      if (!$mxe_xml->documents) {
+      if (!$mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->documents) {
         $mxe_xml->addChild('documents');
       }
-      $doc = $mxe_xml->documents->addChild('document');
+      $doc = $mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->documents->addChild('document');
       $doc->addAttribute('id', $this->pid);
       $doc->addAttribute('role', $type); //@TODO: validate
       $doc->addAttribute('access', 'oa');
@@ -76,36 +79,36 @@ class Document{
     $conf_event = $ddf_xml->addChild('event');
     $conf_event->addAttribute('event_role', 'ep');
     $conf_event->addChild('title');
-    if (!empty($conf_mxe_xml->title->original->main)) {
-      $conf_event->title->addChild('full', (string) $conf_mxe_xml->title->original->main);
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main)) {
+      $conf_event->children('http://mx.dtic.dk/ns/mxe_draft')->title->addChild('full', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main);
     }
-    if (!empty($conf_mxe_xml->title->original->short)) {
-      $conf_event->title->addChild('acronym', (string) $conf_mxe_xml->title->original->short);
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short)) {
+      $conf_event->children('http://mx.dtic.dk/ns/mxe_draft')->title->addChild('acronym', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short);
     }
-    if (!empty($conf_mxe_xml->title->number)) {
-      $conf_event->title->addChild('number', (string) $conf_mxe_xml->title->number);
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number)) {
+      $conf_event->children('http://mx.dtic.dk/ns/mxe_draft')->title->addChild('number', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number);
     }
 
-    if (!empty($conf_mxe_xml->date->start) || !empty($conf_mxe_xml->date->end)) {
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start) || !empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end)) {
       $conf_event->addChild('dates');
-      $conf_event->dates->addChild('start', (string) $conf_mxe_xml->date->start);
-      $conf_event->dates->addChild('end', (string) $conf_mxe_xml->date->end);
+      $conf_event->dates->addChild('start', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start);
+      $conf_event->dates->addChild('end', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end);
     }
 
     $place = '';
-    if (!empty($conf_mxe_xml->location->city)) {
-      $place .= (string) $conf_mxe_xml->location->city;
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city)) {
+      $place .= (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city;
     }
-    if (!empty($conf_mxe_xml->location->country)) {
-      $place .= ', ' . (string) $conf_mxe_xml->location->country;
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country)) {
+      $place .= ', ' . (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country;
     }
     if (!empty($place)) {
       $conf_event->addChild('place', $place);
     }
-    if (!empty($conf_mxe_xml->uri)) {
-      $conf_event->addChild('uri', (string) $conf_mxe_xml->uri);
+    if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri)) {
+      $conf_event->addChild('uri', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri);
     }
-    $conf_event->addChild('id', (string) $conf_mxe_xml->id);
+    $conf_event->addChild('id', (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->id);
     $conf_event->id->addAttribute('type', 'loc_eve');
     
     if (!is_null($contrib_pid)) {
@@ -115,7 +118,7 @@ class Document{
       $contrib_mxe_xml = new SimpleXMLElement($contrib_mxe);
 
       // Add sub_event for track
-      $track = $contrib_mxe_xml->xpath('//super_event[@event_type="tra"]');
+      $track = $contrib_mxe_xml->xpath('//mxe:super_event[@event_type="tra"]');
 
       $track_node = $conf_event->addChild('sub_event');
       $track_node->addAttribute('event_type', 'tra');
@@ -124,29 +127,29 @@ class Document{
       $track_node->addChild('acronym', (string) $track[0]->acronym);
 
       // Add sub_event for session
-      $sess = $contrib_mxe_xml->xpath('//super_event[@event_type="ses"]');
+      $sess = $contrib_mxe_xml->xpath('//mxe:super_event[@event_type="ses"]');
       $sess_node = $conf_event->addChild('sub_event');
       $sess_node->addAttribute('event_type', 'ses');
-      $sess_node->addChild('title', (string) $sess[0]->title);
-      $sess_node->addChild('acronym', (string) $sess[0]->acronym);
+      $sess_node->addChild('title', (string) $sess[0]->children('http://mx.dtic.dk/ns/mxe_draft')->title);
+      $sess_node->addChild('acronym', (string) $sess[0]->children('http://mx.dtic.dk/ns/mxe_draft')->acronym);
 
 
       // Add event for contribution
       $cont_event = $ddf_xml->addChild('event');
       $cont_event->addAttribute('event_role', 'ep');
       $cont_event->addChild('title');
-      $cont_event->title->addChild('full', (string) $contrib_mxe_xml->title->original->main);
+      $cont_event->title->addChild('full', (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main);
       $cont_event->addChild('dates');
-      $cont_event->dates->addChild('start', (string) $contrib_mxe_xml->date->start);  //@TODO: check date format
-      $cont_event->dates->addChild('end', (string) $contrib_mxe_xml->date->end);
+      $cont_event->dates->addChild('start', (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start);  //@TODO: check date format
+      $cont_event->dates->addChild('end', (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end);
 
       $place = '';
-      if (!empty($contrib_mxe_xml->location->city)) {
-        $place .= (string) $contrib_mxe_xml->location->city;
+      if (!empty($contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city)) {
+        $place .= (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city;
       }
 
-      if (!empty($contrib_mxe_xml->location->country)) {
-        $place .= $place . ', ' . $contrib_mxe_xml->location->country;
+      if (!empty($contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country)) {
+        $place .= $place . ', ' . $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country;
       }
       $cont_event->addChild('place', $place);
       $cont_event->addChild('uri', (string) $conf_mxe_xml . '/fedora/repository/' . $this->pid);  //@TODO: get properly
@@ -173,7 +176,7 @@ class Document{
     }
 
     $ddf_xml->addAttribute('doc_type', $doc_type);
-    $date = (string) $ddf_xml->event[0]->dates->start;
+    $date = (string) $ddf_xml->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->event[0]->dates->start;
     $explode_date = explode('-', $date);
     $year = $explode_date[2];
 

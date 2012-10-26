@@ -23,7 +23,7 @@ function dtu_render_conference_block() {
     else {
       $tn = '';
     }
-    
+
     $abbrev_link = l($abbrev_title, $link);
     $title_link = l($item->objectProfile->objLabel, $link);
 

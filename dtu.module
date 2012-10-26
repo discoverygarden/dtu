@@ -379,13 +379,15 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
   if ($conf) {
     $mxe = $conf->get_datastream_dissemination('MXE');
     $mxe_xml = simplexml_load_string($mxe);
-  
+    $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
+
     if ($mxe_xml) {
-      $tracks_query = $mxe_xml->xpath('//sub_events/sub_event[@event_type="' . $type .'"]');
+      $tracks_query = $mxe_xml->xpath('//mxe:sub_events/mxe:sub_event[@event_type="' . $type .'"]');
       foreach ($tracks_query AS $track) {
-        $title = (string) $track->title;
-        $key = (string) $track->acronym . '--delim--' . $title;
-        $tracks[$key] = $title; 
+        $title = (string) $track->children('http://mx.dtic.dk/ns/mxe_draft')->title;
+        $key = (string) $track->children('http://mx.dtic.dk/ns/mxe_draft')->acronym . '--delim--' . $title;
+        $tracks[$key] = $title;
+
       }
     }
   }
@@ -527,7 +529,7 @@ function dtu_islandora_object_event($function, $parameters, $result) {
 }
 
 function dtu_mxe_tidy(&$mxe_xml) {
-  $people = $mxe_xml->xpath('//person');
+  $people = $mxe_xml->xpath('//mxe:person');
 
   $modified = 0;
   $people_count = 1;
@@ -547,7 +549,7 @@ function dtu_mxe_tidy(&$mxe_xml) {
     $people_count++;
   }
 
-  $orgs = $mxe_xml->xpath('/eve/organisation');
+  $orgs = $mxe_xml->xpath('/mxe:eve/mxe:organisation');
   $org_count = 1;
   foreach ($orgs AS $org) {
     $has_aff = FALSE;

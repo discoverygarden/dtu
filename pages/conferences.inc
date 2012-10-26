@@ -12,8 +12,9 @@ function dtu_conference_list() {
     $item = new Fedora_Item($conference['pid']);
     $mxe = $item->get_datastream_dissemination('MXE');
     $mxe_xml = simplexml_load_string($mxe);
-    
-    $year = (string) $mxe_xml->date->year;
+
+    $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
+    $year = (string) $mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->year;
     
     $obj_link = l($item->objectProfile->objLabel, 'fedora/repository/' . $conference['pid']);
     $edit_link = l(t('Edit'), 'fedora/repository/' . $conference['pid'], array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
@@ -21,7 +22,7 @@ function dtu_conference_list() {
     $hide_link = l(t('Hide'), 'admin/conference/' . $conference['pid'] . '/hide');
     $contributions_link = l(t('Contributions'), 'admin/conference/' . $conference['pid'] . '/contributions');
     
-    $program = $mxe_xml->xpath('//documents/document[@role="program"]');
+    $program = $mxe_xml->xpath('//mxe:documents/mxe:document[@role="program"]');
     
     if ($program) {
       // Edit link
@@ -32,7 +33,7 @@ function dtu_conference_list() {
       $prog_link = l(t('Add'), 'admin/conference/' . $conference['pid'] . '/document/program');
     }
     
-    $proceedings = $mxe_xml->xpath('//documents/document[@role="proceedings"]');
+    $proceedings = $mxe_xml->xpath('//mxe:documents/mxe:document[@role="proceedings"]');
     
     if ($proceedings) {
       // Edit link
