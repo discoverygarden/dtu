@@ -1,17 +1,17 @@
 <?php
+/*
 define('CONFERENCE_CMODEL', 'dtu:conferenceCModel');
 define('CONFERENCE_COLLECTION_PID', 'dtu:conferences');
 define('CONTRIBUTION_CMODEL', 'dtu:contributionCModel');
 define('DOCUMENT_CMODEL', 'dtu:documentCModel');
 define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
+*/
 
-/*
 define('CONFERENCE_CMODEL', 'islandora:dtuConferenceCmodel');
 define('CONFERENCE_COLLECTION_PID', 'islandora:296');
 define('CONTRIBUTION_CMODEL', 'islandora:dtuContributionCmodel');
 define('DOCUMENT_CMODEL', 'islandora:dtuDocumentCmodel');
 define('REPO_URL', 'http://dtu-phase2.dgi:8080/fedora/get/');
-*/
 
 /**
  * Implementation of hook_init()
@@ -154,11 +154,9 @@ function dtu_block($op, $delta = 0, $edit = array()) {
  * Implementation of hook_form_alter()
  */
 function dtu_form_alter(&$form, &$form_state, $form_id) {
-  //if ( $form_id == 'fedora_repository_ingest_form' && $form_state['storage']['step'] == 2) {
-    $form['#validate'][] = 'dtu_conf_validate';
- // }
+  $form['#validate'][] = 'dtu_conf_validate';
   $form['#submit'][] = 'dtu_conf_submit';
-  
+
   if (is_array($form['TracksSessions']['SuperEvent']['Track']['Title'])) {
     if (!empty($form['TracksSessions']['SuperEvent']['Track']['Acronym']['#default_value']) && !empty($form['TracksSessions']['SuperEvent']['Track']['Title']['#default_value'])) {
       $track_key = $form['TracksSessions']['SuperEvent']['Track']['Acronym']['#default_value'] . '--delim--' . $form['TracksSessions']['SuperEvent']['Track']['Title']['#default_value'];
@@ -166,7 +164,7 @@ function dtu_form_alter(&$form, &$form_state, $form_id) {
     }
     
     // Populate proper track options for the contribution
-    $form['TracksSessions']['SuperEvent']['Track']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'tra');
+    $form['TracksSessions']['SuperEvent']['Track']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'tra', $form);
   }
   
   if (is_array($form['TracksSessions']['SuperEvent']['Session']['Title'])) {
@@ -175,8 +173,9 @@ function dtu_form_alter(&$form, &$form_state, $form_id) {
       $form['TracksSessions']['SuperEvent']['Session']['Title']['#default_value'] = $sess_key;
     }
     // Populate proper session options for the contribution
-    $form['TracksSessions']['SuperEvent']['Session']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'ses');
+    $form['TracksSessions']['SuperEvent']['Session']['Title']['#options'] = dtu_get_contrib_tracks_sess(arg(2), 'ses', $form);
   }
+
 }
 
 function dtu_islandora_tabs_alter(&$tabs, $params) {
@@ -197,7 +196,6 @@ function dtu_islandora_content_model_forms_get_transforms() {
 }
 
 function dtu_conf_validate($form, &$form_state) {
-  watchdog('mitch', 'form validate called');
   if ($form_state['values']['dsid'] == 'MXE') {
     if (!empty($form_state['values']['PrimaryInformation']['DateParent']['DateFrom'])) {
       $from = $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'];
@@ -217,9 +215,8 @@ function dtu_conf_validate($form, &$form_state) {
       $form_state['values']['PrimaryInformation']['DateParent']['DateTo'] = $to_explode[2] . '-' . $to_explode[1] . '-' . $to_explode[0];
     }
   }
-  
+
   if ($form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']) {
-    watchdog('mitch', 'form session value there');
     $ses_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']);
     $form_state['values']['TracksSessions']['SuperEvent']['Session'] = '';
     $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title'] = $ses_val[1];
@@ -227,13 +224,11 @@ function dtu_conf_validate($form, &$form_state) {
   }
   
   if ($form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']) {
-    watchdog('mitch', 'form track value there');
     $track_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']);
     $form_state['values']['TracksSessions']['SuperEvent']['Track'] = '';
     $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title'] = $track_val[1];
     $form_state['values']['TracksSessions']['SuperEvent']['Track']['Acronym'] = $track_val[0];
   }
-  
   
   // Handle file uploads
   $validators = array();
@@ -357,18 +352,17 @@ function dtu_get_contributions($pid) {
   return $object_info;
 }
 
-function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
+function dtu_get_contrib_tracks_sess($pid, $type = 'tra', $form) {
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   module_load_include('inc', 'fedora_repository', 'api/fedora_utils');
 
-  watchdog('mitch', 'post is: ' . print_r($_POST, TRUE));
   // Consequence of this brittle setup, AHAH requests have different args()
   if (!valid_pid($pid)) {
     $pid = $_POST['pid'];
   }
 
   $tracks = array();
-  
+
   $conf_pid = $_GET['conf'];
 
   if (is_null($conf_pid) && valid_pid($pid)) {
@@ -380,6 +374,9 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
 
   if (valid_pid($conf_pid)) {
     $conf = new Fedora_Item($conf_pid);
+  }
+  else {
+    //$conf = new Fedora_Item();
   }
 
   if ($conf) {
@@ -397,7 +394,18 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
       }
     }
   }
-  
+
+  if (empty($tracks)) {
+    switch ($type) {
+      case 'tra':
+        $tracks = $form['TracksSessions']['SuperEvent']['Track']['Title']['#options'];
+        break;
+      case 'ses': {
+        $tracks = $form['TracksSessions']['SuperEvent']['Session']['Title']['#options'];
+        break;
+      }
+    }
+  }
   return $tracks;
 }
 

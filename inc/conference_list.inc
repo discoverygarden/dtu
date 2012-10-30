@@ -12,8 +12,8 @@ function dtu_render_conference_block() {
     $mxe = $item->get_datastream_dissemination('MXE');
     $mxe_xml = simplexml_load_string($mxe);
 
-    $year = (string) $mxe_xml->date->year;
-    $abbrev_title = (string) $mxe_xml->title->original->short;
+    $year = (string) $mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->year;
+    $abbrev_title = (string) $mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
 
     $link = 'fedora/repository/' . $conference['pid'];
 
