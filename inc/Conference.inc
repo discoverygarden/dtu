@@ -122,12 +122,12 @@ class Conference {
 
     $conference_event = $doc_ddf_xml->xpath('//mxd:event/id[text()="' . $this->pid . '"]/..');
 
-    $conference_event[0]->title->full = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
-    $conference_event[0]->title->acronym = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
-    $conference_event[0]->title->number = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->full = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->acronym = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->number = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number;
 
-    $conference_event[0]->dates->start = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start;
-    $conference_event[0]->dates->end = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->dates->start = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->dates->end = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end;
 
     $place = '';
     if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city)) {
@@ -137,15 +137,15 @@ class Conference {
       $place .= ', ' . (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country;
     }
 
-    if (!$conference_event[0]->place) {
-      $conference_event[0]->addChild('place');
+    if (!$conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->place) {
+      $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->addChild('place');
     }
-    $conference_event[0]->place = $place;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->place = $place;
 
-    if (!$conference_event[0]->uri) {
-      $conference_event[0]->addChild('uri');
+    if (!$conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->uri) {
+      $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->addChild('uri');
     }
-    $conference_event[0]->uri = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
+    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->uri = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
 
     $document->modify_datastream_by_value($doc_ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
   }

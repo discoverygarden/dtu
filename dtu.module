@@ -197,6 +197,7 @@ function dtu_islandora_content_model_forms_get_transforms() {
 }
 
 function dtu_conf_validate($form, &$form_state) {
+  watchdog('mitch', 'form validate called');
   if ($form_state['values']['dsid'] == 'MXE') {
     if (!empty($form_state['values']['PrimaryInformation']['DateParent']['DateFrom'])) {
       $from = $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'];
@@ -218,6 +219,7 @@ function dtu_conf_validate($form, &$form_state) {
   }
   
   if ($form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']) {
+    watchdog('mitch', 'form session value there');
     $ses_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title']);
     $form_state['values']['TracksSessions']['SuperEvent']['Session'] = '';
     $form_state['values']['TracksSessions']['SuperEvent']['Session']['Title'] = $ses_val[1];
@@ -225,6 +227,7 @@ function dtu_conf_validate($form, &$form_state) {
   }
   
   if ($form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']) {
+    watchdog('mitch', 'form track value there');
     $track_val = explode('--delim--', $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title']);
     $form_state['values']['TracksSessions']['SuperEvent']['Track'] = '';
     $form_state['values']['TracksSessions']['SuperEvent']['Track']['Title'] = $track_val[1];
@@ -358,6 +361,7 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   module_load_include('inc', 'fedora_repository', 'api/fedora_utils');
 
+  watchdog('mitch', 'post is: ' . print_r($_POST, TRUE));
   // Consequence of this brittle setup, AHAH requests have different args()
   if (!valid_pid($pid)) {
     $pid = $_POST['pid'];
@@ -366,22 +370,24 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra') {
   $tracks = array();
   
   $conf_pid = $_GET['conf'];
-  
-  if (is_null($conf_pid)) {
+
+  if (is_null($conf_pid) && valid_pid($pid)) {
     $cont = new Fedora_Item($pid);
     $rels_ext = $cont->get_rdf_relationships();
     $conf_pid = $rels_ext['fedora:isMemberOfCollection'][1];
-
   }
 
-  $conf = new Fedora_Item($conf_pid);
-  
+
+  if (valid_pid($conf_pid)) {
+    $conf = new Fedora_Item($conf_pid);
+  }
+
   if ($conf) {
     $mxe = $conf->get_datastream_dissemination('MXE');
     $mxe_xml = simplexml_load_string($mxe);
-    $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
 
     if ($mxe_xml) {
+      $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
       $tracks_query = $mxe_xml->xpath('//mxe:sub_events/mxe:sub_event[@event_type="' . $type .'"]');
       foreach ($tracks_query AS $track) {
         $title = (string) $track->children('http://mx.dtic.dk/ns/mxe_draft')->title;
