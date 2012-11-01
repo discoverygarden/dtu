@@ -308,21 +308,8 @@ function dtu_get_conferences() {
     and \$object <fedora-model:state> <info:fedora/fedora-system:def/model#Active>
     and \$object <fedora-model:hasModel> <info:fedora/" . CONFERENCE_CMODEL . ">
     order by \$object";
-    
-  $query_string = urlencode($query_string);
 
-  $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
-  $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
-  $content = do_curl($url);
-  
-  $results = simplexml_load_string($content);
-  
-  $object_info = array();
-  foreach ($results->results->result AS $result) {
-    $pid = (string) $result->object['uri'][0];
-    $pid = preg_replace('/^info:fedora\//', '', $pid);
-    $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
-  }
+  $object_info = dtu_object_pid_query($query_string);
   
   return $object_info;
 }
@@ -335,21 +322,8 @@ function dtu_get_contributions($pid) {
     and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
     and \$object <fedora-model:hasModel> <info:fedora/" . CONTRIBUTION_CMODEL . ">
     order by \$object";
-    
-  $query_string = urlencode($query_string);
 
-  $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
-  $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
-  $content = do_curl($url);
-  
-  $results = simplexml_load_string($content);
-  
-  $object_info = array();
-  foreach ($results->results->result AS $result) {
-    $pid = (string) $result->object['uri'][0];
-    $pid = preg_replace('/^info:fedora\//', '', $pid);
-    $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
-  }
+  $object_info = dtu_object_pid_query($query_string);
   
   return $object_info;
 }
@@ -416,32 +390,55 @@ function dtu_get_contrib_tracks_sess($pid, $type = 'tra', $form) {
  * @param string $pid
  * @param boolean $delete_tree
  *   TRUE if all child objects should also be deleted
+ * @param boolean $delete_conf
+ *   TRUE if the conference should be deleted
  */
-function dtu_delete_conference($pid, $delete_tree = TRUE) {
+function dtu_delete_conference($pid, $delete_tree = TRUE, $delete_conf = TRUE) {
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
-  
+
+  // Delete sub-collections: Documents, Contribution
+
+  $query_string = "select \$object \$title from <#ri>
+    where \$object <dc:title> \$title
+    and \$object <fedora-model:state> <info:fedora/fedora-system:def/model#Active>
+    and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
+    and \$object <fedora-model:hasModel> <info:fedora/islandora:collectionCModel>
+    order by \$object";
+
+  $sub_collections = dtu_object_pid_query($query_string);
+
+  foreach ($sub_collections AS $sub_col) {
+    $item = new Fedora_Item($sub_col['pid']);
+    $item->purge('Purged via dtu module');
+    drupal_set_message('Item purged: ' . $item->objectProfile->objLabel);
+  }
+
+  // Delete child documents
+  $documents = dtu_get_contribution_documents($pid);
+  foreach ($documents AS $document) {
+    dtu_delete_document($document['pid']);
+  }
+
   if ($delete_tree) {
     $contributions = dtu_get_contributions($pid);
     foreach ($contributions AS $contribution) {
-      dtu_delete_contribution($contribution);
+      dtu_delete_contribution($contribution['pid']);
     }
   }
   
   // Delete conference
-  $item = new Fedora_Item($pid);
-  $item->purge('Purged via dtu module');
+  if ($delete_conf) {
+    $item = new Fedora_Item($pid);
+    $item->purge('Purged via dtu module');
+    drupal_set_message('Item purged: ' . $item->objectProfile->objLabel);
+  }
 }
 
 function dtu_delete_contribution($pid) {
-  $documents = dtu_get_contribution_documents($pid);
-  
-  foreach ($documents AS $document) {
-    dtu_delete_document($document);
-  }
-  
   // Delete contribution
   $item = new Fedora_Item($pid);
   $item->purge('Purged via dtu module');
+  drupal_set_message('Item purged: ' . $item->objectProfile->objLabel);
 }
 
 function dtu_delete_document($pid) {
@@ -450,6 +447,7 @@ function dtu_delete_document($pid) {
   // Delete document
   $item = new Fedora_Item($pid);
   $item->purge('Purged via dtu module');
+  drupal_set_message('Item purged: ' . $item->objectProfile->objLabel);
 }
 
 function dtu_get_contribution_documents($pid) {
@@ -460,22 +458,27 @@ function dtu_get_contribution_documents($pid) {
     and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
     and \$object <fedora-model:hasModel> <info:fedora/" . DOCUMENT_CMODEL . ">
     order by \$object";
-    
+  $object_info = dtu_object_pid_query($query_string);
+
+  return $object_info;
+}
+
+function dtu_object_pid_query($query_string) {
   $query_string = urlencode($query_string);
 
   $url = variable_get('fedora_repository_url', 'http://localhost:8080/fedora/risearch');
   $url .= "?type=tuples&flush=TRUE&format=Sparql&lang=itql&stream=on&query=". $query_string;
   $content = do_curl($url);
-  
+
   $results = simplexml_load_string($content);
-  
+
   $object_info = array();
   foreach ($results->results->result AS $result) {
     $pid = (string) $result->object['uri'][0];
     $pid = preg_replace('/^info:fedora\//', '', $pid);
     $object_info[] = array('pid' => $pid, 'title' => (string) $result->title);
   }
-  
+
   return $object_info;
 }
 
