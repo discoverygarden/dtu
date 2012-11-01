@@ -8,14 +8,22 @@ class Conference {
     $this->fedora_item = $fedora_item;
     $this->pid = $fedora_item->pid;
   }
-  
+
+  /**
+   * Handles the ingest event, when a Conference object is created.
+   */
   public function create() {
-    //$this->fedora_item->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
+    // Create a stub object that acts as a collection for contributions
     $this->addContributionCollection($this->pid);
+    // Create a stub object that acts as a collection for documents
     $this->addDocumentCollection($this->pid);
+    // Perform final cleanup on the MXE datastream
     $this->updateMXE();
   }
-  
+
+  /**
+   * Handles when a Conference is modified, updates child contributions
+   */
   public function update() {
     $mxe = $this->fedora_item->get_datastream_dissemination('MXE');
     $mxe_xml = new SimpleXMLElement($mxe);
@@ -33,14 +41,23 @@ class Conference {
     }
     // update documents <event>
   }
-  
+
+  /**
+   * Add a stub collection object to the Conference to contain Contributions. This allows for the use of a form association and may have browsing uses.
+   * @param $parent_id
+   */
   private function addContributionCollection($parent_pid) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
     $contributions = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Contributions', $owner = '');
+
+    // Add collection cmodel
     $contributions->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    // Relate to parent Conference ($this)
     $contributions->add_relationship('isMemberOfCollection', $parent_pid);
+    // Capture this unique relationship (stub collection) in RELS-EXT
     $contributions->add_relationship('contributionCollection', $parent_pid);
+
     $collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
@@ -54,14 +71,23 @@ class Conference {
     $contributions->add_datastream_from_string($collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
     $contributions->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
   }
-  
+
+  /**
+   * Add a stub collection object to the Conference to contain Documents. This allows for the use of a form association and may have browsing uses.
+   * @param $parent_pid
+   */
   private function addDocumentCollection($parent_pid) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   
     $documents = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Documents', $owner = '');
+
+    // Add collection cmodel
     $documents->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    // Relate to parent Conference ($this)
     $documents->add_relationship('isMemberOfCollection', $parent_pid);
+    // Capture this unique relationship (stub collection) in RELS-EXT
     $documents->add_relationship('documentCollection', $parent_pid);
+
     $document_collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
@@ -75,7 +101,12 @@ class Conference {
     $documents->add_datastream_from_string($document_collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
     $documents->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
   }
-  
+
+  /**
+   * Modifications to Contributions, 
+   * @param $cont_pid
+   * @param $conf_mxe_xml
+   */
   private function updateContribution($cont_pid, $conf_mxe_xml) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
@@ -169,6 +200,7 @@ class Conference {
 
     $mxe_xml->addChild('id', $this->pid);
 
+    // MXE XML tasks, relate persons to organisation via ids
     dtu_mxe_tidy(&$mxe_xml);
     
     $this->fedora_item->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
