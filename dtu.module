@@ -271,11 +271,15 @@ function dtu_conf_validate($form, &$form_state) {
     }
   }
 
-  /* not implemented yet
   if (!empty($form_state['values']['RepositoryFile']['PullURL'])) {
-    $data = file_get_contents($form_state['values']['RepositoryFile']['PullURL']);  //@TODO: validate URL
+    if (in_array(parse_url($form_state['values']['RepositoryFile']['PullURL'], PHP_URL_SCHEME), array('http', 'https'))) {
+      $data = file_get_contents($form_state['values']['RepositoryFile']['PullURL']);
+
+      $file = file_directory_path() . '/' . time() . '-tmp';
+      file_put_contents($file, $data);
+      $_SESSION['fedora_ingest_files']["OBJ"] = $file;
+    }
   }
-  */
 }
 
 function dtu_conf_submit($form, &$form_state) {
