@@ -607,3 +607,8 @@ function dtu_multisite_update($pid, $base_url) {
     drupal_write_record('dtu_multisite', $record);
   }
 }
+
+function dtu_get_conference_url($conf_id) {
+  $conf_url = db_result(db_query("SELECT base_url FROM {dtu_multisite} WHERE pid = '%s'", $conf_id));
+  return $conf_url;
+}

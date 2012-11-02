@@ -1,0 +1,32 @@
+<?php
+
+function dtu_install() {
+  drupal_install_schema('dtu');
+}
+
+function dtu_uninstall() {
+  drupal_uninstall_schema('dtu');
+}
+
+function dtu_schema() {
+  $schema['dtu_multisite'] = array(
+    'description' => 'Conference and multisite tracking.',
+    'fields' => array(
+      'pid' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => '64',
+        'default' => '',
+      ),
+      'base_url' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => '255',
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('pid'),
+  );
+
+  return $schema;
+}

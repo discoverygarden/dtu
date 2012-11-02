@@ -53,7 +53,10 @@ class Document{
       $doc->addAttribute('access', 'oa');
       
       $doc->addChild('description', ucfirst($type));
-      $doc->addChild('uri', REPO_URL . $this->pid);
+
+      $conf_pid = dtu_get_conference_url($conf);
+
+      $doc->addChild('uri', $conf_pid . '/fedora/repository/' . $this->pid);
       $parent->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
 
       switch ($type) {
@@ -153,7 +156,10 @@ class Document{
         $place .= $place . ', ' . (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country;
       }
       $cont_event->addChild('place', $place);
-      $cont_event->addChild('uri', (string) $conf_mxe_xml . '/fedora/repository/' . $this->pid);  //@TODO: get properly
+
+      $conf_url = dtu_get_conference_url($conf_mxe_xml->attributes()->rec_id);
+
+      $cont_event->addChild('uri', $conf_url . '/fedora/repository/' . $this->pid);  //@TODO: get properly
       $cont_event->addChild('id', $this->pid);
       $cont_event->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->id->addAttribute('type', 'loc_eve');
 
