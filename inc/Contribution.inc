@@ -33,11 +33,13 @@ class Contribution {
     $cont_mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
 
     $this->updateMXE($conf_mxe_xml, $cont_mxe_xml, $conf_pid);
-
+    
+    /* Unused as of 11/19/12
     $modified = dtu_mxe_tidy(&$cont_mxe_xml);
     if ($modified) {
       $this->fedora_item->modify_datastream_by_value($cont_mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
     }
+    */
   }
 
   public function update() {

@@ -544,6 +544,8 @@ function dtu_islandora_object_event($function, $parameters, $result) {
   }
 }
 
+// Not used
+// Map people to orgs via add_no attribute
 function dtu_mxe_tidy(&$mxe_xml) {
   $people = $mxe_xml->xpath('//mxe:person');
 

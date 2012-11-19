@@ -27,11 +27,13 @@ class Conference {
       $this->updateContribution($contribution['pid'], $mxe_xml);
     }
 
+    /* Unused as of 11/19/12
     $modified = dtu_mxe_tidy(&$mxe_xml);
     if ($modified) {
       $this->fedora_item->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
     }
     // update documents <event>
+    */
   }
   
   private function addContributionCollection($parent_pid) {
