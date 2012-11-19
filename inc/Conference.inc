@@ -8,14 +8,22 @@ class Conference {
     $this->fedora_item = $fedora_item;
     $this->pid = $fedora_item->pid;
   }
-  
+
+  /**
+   * Handles the ingest event, when a Conference object is created.
+   */
   public function create() {
-    //$this->fedora_item->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
+    // Create a stub object that acts as a collection for contributions
     $this->addContributionCollection($this->pid);
+    // Create a stub object that acts as a collection for documents
     $this->addDocumentCollection($this->pid);
+    // Perform final cleanup on the MXE datastream
     $this->updateMXE();
   }
-  
+
+  /**
+   * Handles when a Conference is modified, updates child contributions
+   */
   public function update() {
     $mxe = $this->fedora_item->get_datastream_dissemination('MXE');
     $mxe_xml = new SimpleXMLElement($mxe);
@@ -35,14 +43,23 @@ class Conference {
     // update documents <event>
     */
   }
-  
+
+  /**
+   * Add a stub collection object to the Conference to contain Contributions. This allows for the use of a form association and may have browsing uses.
+   * @param $parent_id
+   */
   private function addContributionCollection($parent_pid) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
     $contributions = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Contributions', $owner = '');
+
+    // Add collection cmodel
     $contributions->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    // Relate to parent Conference ($this)
     $contributions->add_relationship('isMemberOfCollection', $parent_pid);
+    // Capture this unique relationship (stub collection) in RELS-EXT
     $contributions->add_relationship('contributionCollection', $parent_pid);
+
     $collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
@@ -56,14 +73,23 @@ class Conference {
     $contributions->add_datastream_from_string($collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
     $contributions->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
   }
-  
+
+  /**
+   * Add a stub collection object to the Conference to contain Documents. This allows for the use of a form association and may have browsing uses.
+   * @param $parent_pid
+   */
   private function addDocumentCollection($parent_pid) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   
     $documents = Fedora_Item::ingest_new_item($pid = '', $state = 'A', $label = 'Documents', $owner = '');
+
+    // Add collection cmodel
     $documents->add_relationship('hasModel', 'islandora:collectionCModel', FEDORA_MODEL_URI);
+    // Relate to parent Conference ($this)
     $documents->add_relationship('isMemberOfCollection', $parent_pid);
+    // Capture this unique relationship (stub collection) in RELS-EXT
     $documents->add_relationship('documentCollection', $parent_pid);
+
     $document_collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
@@ -77,7 +103,12 @@ class Conference {
     $documents->add_datastream_from_string($document_collection_policy, 'COLLECTION_POLICY', 'COLLECTION_POLICY', 'text/xml', 'X');
     $documents->add_datastream_from_file(drupal_get_path('module', 'fedora_repository') . '/images/Crystal_Clear_filesystem_folder_grey.png', 'TN', 'Thumbnail.png', 'image/png', 'M');
   }
-  
+
+  /**
+   * Modifications to Contributions,
+   * @param $cont_pid
+   * @param $conf_mxe_xml
+   */
   private function updateContribution($cont_pid, $conf_mxe_xml) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
@@ -91,11 +122,11 @@ class Conference {
     $super_event[0]->title->main = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
     $super_event[0]->title->short = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
     
-    if (!$super_event[0]->organisation) {
+    if (!$super_event[0]->children('http://mx.dtic.dk/ns/mxe_draft')->organisation) {
       $super_event[0]->addChild('organisation');
     }
     $super_event[0]->organisation = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->venue;
-    if (!$super_event[0]->uri) {
+    if (!$super_event[0]->children('http://mx.dtic.dk/ns/mxe_draft')->uri) {
       $super_event[0]->addChild('uri');
     }
     $super_event[0]->uri = (string) $conf_mxe_xml->uri;
@@ -124,12 +155,12 @@ class Conference {
 
     $conference_event = $doc_ddf_xml->xpath('//mxd:event/id[text()="' . $this->pid . '"]/..');
 
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->full = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->acronym = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->number = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number;
+    $conference_event[0]->title->full = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
+    $conference_event[0]->title->acronym = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
+    $conference_event[0]->title->number = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->number;
 
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->dates->start = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start;
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->dates->end = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end;
+    $conference_event[0]->dates->start = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start;
+    $conference_event[0]->dates->end = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->end;
 
     $place = '';
     if (!empty($conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->city)) {
@@ -139,15 +170,15 @@ class Conference {
       $place .= ', ' . (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->location->country;
     }
 
-    if (!$conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->place) {
-      $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->addChild('place');
+    if (!$conference_event[0]->place) {
+      $conference_event[0]->addChild('place');
     }
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->place = $place;
+    $conference_event[0]->place = $place;
 
-    if (!$conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->uri) {
-      $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->addChild('uri');
+    if (!$conference_event[0]->uri) {
+      $conference_event[0]->addChild('uri');
     }
-    $conference_event[0]->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->uri = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
+    $conference_event[0]->uri = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
 
     $document->modify_datastream_by_value($doc_ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
   }
@@ -171,6 +202,7 @@ class Conference {
 
     $mxe_xml->addChild('id', $this->pid);
 
+    // MXE XML tasks, relate persons to organisation via ids
     dtu_mxe_tidy(&$mxe_xml);
     
     $this->fedora_item->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
