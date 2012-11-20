@@ -198,6 +198,22 @@ function dtu_islandora_content_model_forms_get_transforms() {
 }
 
 function dtu_conf_validate($form, &$form_state) {
+
+  // Validate person's organisation number matches an existing organisation tab
+  if (count($form_state['values']['Persons']['Person'])) {
+    $org_count = count($form_state['values']['Persons']['Organisation']);
+
+    $person_num = 0;
+    foreach ($form_state['values']['Persons']['Person'] AS $person) {
+      $selected_org = $person['PersonParent']['org'];
+
+      if ($selected_org > $org_count) {
+        form_set_error('Persons][Person][' . $person_num . '][PersonParent][org', t('The selected organisation reference does not exist'));
+      }
+      $person_num++;
+    }
+  }
+
   if ($form_state['values']['dsid'] == 'MXE') {
     if (!empty($form_state['values']['PrimaryInformation']['DateParent']['DateFrom'])) {
       $from = $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'];
