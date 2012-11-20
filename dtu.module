@@ -181,7 +181,7 @@ function dtu_form_alter(&$form, &$form_state, $form_id) {
 }
 
 function dtu_islandora_tabs_alter(&$tabs, $params) {
-  if (empty($_GET['add_tab'])) {
+  if (empty($_GET['add_tab']) && !strstr($_SERVER['HTTP_REFERER'], 'add_tab')) {
     unset($tabs['add_tab']);
   }
 }
