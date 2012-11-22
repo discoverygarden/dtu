@@ -196,11 +196,14 @@ class Document{
     // <document> node
 
     // check for obj
-    //$datastreams = $this->fedora_item->get_datastreams_list_as_array();
-    $obj_info = $this->fedora_item->get_datastream_info('OBJ');
+    $datastreams = $this->fedora_item->get_datastreams_list_as_array();
+    
+    if (array_key_exists('OBJ', $datastreams)) {
+      $obj_info = $this->fedora_item->get_datastream_info('OBJ');
+    }
 
-    if (!empty($obj_info)) {
-      $publication = $ddf_xml->addChild('publication');
+    if ($obj_info) {
+      $publication = $ddf_xml->addChild('mxd:publication', '', 'mxd');
       $publication->addChild('inetpub');
       $publication->inetpub->addChild('title', 'Published in DTU Conferences (by DTU Library)');
       $publication->inetpub->addChild('uri', 'http://'); //@TODO: proper url for parent contrib
