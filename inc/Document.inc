@@ -25,11 +25,11 @@ class Document{
     $mxe_xml = new SimpleXMLElement($mxe);
     $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
 
-    $ddf = $this->fedora_item->get_datastream_dissemination('DDF');
-    $ddf_xml = new SimpleXMLElement($ddf);
-    $ddf_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
+    $mxd = $this->fedora_item->get_datastream_dissemination('MXD');
+    $mxd_xml = new SimpleXMLElement($mxd);
+    $mxd_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
 
-    $this->createEvents($mxe_xml, $ddf_xml, $_SESSION['contribution']);
+    $this->createEvents($mxe_xml, $mxd_xml, $_SESSION['contribution']);
     
     if (isset($_SESSION['contribution'])) {
       //@TODO: need to update contribution if it is set
@@ -72,14 +72,14 @@ class Document{
       }
     }
 
-    $this->updateDDF($ddf_xml, $type);
+    $this->updateMXD($mxd_xml, $type);
 
     unset($_SESSION['conference']);
     unset($_SESSION['document_type']);
   }
   
-  private function createEvents($conf_mxe_xml, $ddf_xml, $contrib_pid = NULL) {
-    $conf_event = $ddf_xml->addChild('event');
+  private function createEvents($conf_mxe_xml, $mxd_xml, $contrib_pid = NULL) {
+    $conf_event = $mxd_xml->addChild('event');
     $conf_event->addAttribute('event_role', 'ep');
     $conf_event->addChild('title');
 
@@ -139,7 +139,7 @@ class Document{
 
 
       // Add event for contribution
-      $cont_event = $ddf_xml->addChild('event');
+      $cont_event = $mxd_xml->addChild('event');
       $cont_event->addAttribute('event_role', 'ep');
       $cont_event->addChild('title');
       $cont_event->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->title->addChild('full', (string) $contrib_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main);
@@ -165,15 +165,15 @@ class Document{
 
     }
     
-    $this->fedora_item->modify_datastream_by_value($ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
+    $this->fedora_item->modify_datastream_by_value($mxd_xml->asXML(), 'MXD', 'MXD', 'text/xml');
   }
 
-  public function updateDDF($ddf_xml, $type) {
-    // DDF attributes
-    $ddf_xml->addAttribute('format_verion', '1.3.0');
-    $ddf_xml->addAttribute('doc_lang', 'eng');
-    $ddf_xml->addAttribute('doc_level', 'und');
-    $ddf_xml->addAttribute('doc_review', 'und');
+  public function updateMXD($mxd_xml, $type) {
+    // MXD attributes
+    $mxd_xml->addAttribute('format_verion', '1.3.0');
+    $mxd_xml->addAttribute('doc_lang', 'eng');
+    $mxd_xml->addAttribute('doc_level', 'und');
+    $mxd_xml->addAttribute('doc_review', 'und');
 
     if ($type == 'paper') {
       $doc_type = 'dcp';
@@ -182,15 +182,15 @@ class Document{
       $doc_type = 'dct';
     }
 
-    $ddf_xml->addAttribute('doc_type', $doc_type);
-    $date = (string) $ddf_xml->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->event[0]->dates->start;
+    $mxd_xml->addAttribute('doc_type', $doc_type);
+    $date = (string) $mxd_xml->children('http://mx.forskningsdatabasen.dk/ns/mxd/')->event[0]->dates->start;
     $explode_date = explode('-', $date);
     $year = $explode_date[2];
 
-    $ddf_xml->addAttribute('doc_year', $year);
-    $ddf_xml->addAttribute('rec_id', $this->pid);
-    $ddf_xml->addAttribute('rec_source', 'dtu_conferences');
-    $ddf_xml->addAttribute('rec_status', 'c');
+    $mxd_xml->addAttribute('doc_year', $year);
+    $mxd_xml->addAttribute('rec_id', $this->pid);
+    $mxd_xml->addAttribute('rec_source', 'dtu_conferences');
+    $mxd_xml->addAttribute('rec_status', 'c');
 
 
     // <document> node
@@ -203,7 +203,7 @@ class Document{
     }
 
     if ($obj_info) {
-      $publication = $ddf_xml->addChild('mxd:publication', '', 'mxd');
+      $publication = $mxd_xml->addChild('mxd:publication', '', 'mxd');
       $publication->addChild('inetpub');
       $publication->inetpub->addChild('title', 'Published in DTU Conferences (by DTU Library)');
       $publication->inetpub->addChild('uri', 'http://'); //@TODO: proper url for parent contrib
@@ -228,6 +228,6 @@ class Document{
 
     }
 
-    $this->fedora_item->modify_datastream_by_value($ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
+    $this->fedora_item->modify_datastream_by_value($mxd_xml->asXML(), 'MXD', 'MXD', 'text/xml');
   }
 }

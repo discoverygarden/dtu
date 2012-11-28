@@ -55,12 +55,12 @@ class Contribution {
       $doc_id = (string) $document_node->attributes()->id;
       $document = new Fedora_Item($doc_id);
 
-      $doc_ddf = $document->get_datastream_dissemination('DDF');
-      $doc_ddf_xml = new SimpleXMLElement($doc_ddf);
-      $doc_ddf_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
+      $doc_mxd = $document->get_datastream_dissemination('MXD');
+      $doc_mxd_xml = new SimpleXMLElement($doc_mxd);
+      $doc_mxd_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
 
 
-      $contrib_event = $doc_ddf_xml->xpath('//mxd:event/mxd:id[text()="' . $this->pid . '"]/..');
+      $contrib_event = $doc_mxd_xml->xpath('//mxd:event/mxd:id[text()="' . $this->pid . '"]/..');
 
       $contrib_event[0]->title->full = (string) $cont_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
       $contrib_event[0]->dates->start = (string) $cont_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->date->start;
@@ -76,7 +76,7 @@ class Contribution {
       $contrib_event[0]->place = $place;
       $contrib_event[0]->uri = $cont_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
 
-      $document->modify_datastream_by_value($doc_ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
+      $document->modify_datastream_by_value($doc_mxd_xml->asXML(), 'MXD', 'MXD', 'text/xml');
     }
 
     $modified = dtu_mxe_tidy(&$cont_mxe_xml);

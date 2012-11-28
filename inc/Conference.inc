@@ -148,12 +148,12 @@ class Conference {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     
     $document = new Fedora_Item($doc_pid);
-    $doc_ddf = $document->get_datastream_dissemination('DDF');
+    $doc_mxd = $document->get_datastream_dissemination('MXD');
 
-    $doc_ddf_xml = new SimpleXMLElement($doc_ddf);
-    $doc_ddf_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
+    $doc_mxd_xml = new SimpleXMLElement($doc_mxd);
+    $doc_mxd_xml->registerXPathNamespace('mxd', 'http://mx.forskningsdatabasen.dk/ns/mxd/');
 
-    $conference_event = $doc_ddf_xml->xpath('//mxd:event/id[text()="' . $this->pid . '"]/..');
+    $conference_event = $doc_mxd_xml->xpath('//mxd:event/id[text()="' . $this->pid . '"]/..');
 
     $conference_event[0]->title->full = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->main;
     $conference_event[0]->title->acronym = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->title->original->short;
@@ -180,7 +180,7 @@ class Conference {
     }
     $conference_event[0]->uri = (string) $conf_mxe_xml->children('http://mx.dtic.dk/ns/mxe_draft')->uri;
 
-    $document->modify_datastream_by_value($doc_ddf_xml->asXML(), 'DDF', 'DDF', 'text/xml');
+    $document->modify_datastream_by_value($doc_mxd_xml->asXML(), 'MXD', 'MXD', 'text/xml');
   }
 
   /**

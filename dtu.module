@@ -313,10 +313,10 @@ function dtu_islandora_object_clone_prepare_xml_alter($xml_string, $ds_id) {
       unset($mxe_xml->documents);
       $xml_string = $mxe_xml->asXML();
       break;
-    case 'ddf':
-      $ddf_xml = new SimpleXMLElement($xml_string);
-      unset($ddf_xml->publication);
-      $xml_string = $ddf_xml->asXML();
+    case 'mxd':
+      $mxd_xml = new SimpleXMLElement($xml_string);
+      unset($mxd_xml->publication);
+      $xml_string = $mxd_xml->asXML();
       break;
   }
 }
@@ -557,8 +557,8 @@ function dtu_islandora_object_event($function, $parameters, $result) {
             $contribution->update();
           }
 
-          // Document DDF updated
-          if (in_array(DOCUMENT_CMODEL, $rels['fedora-model:hasModel']) && $parameters['dsID'] == 'DDF') {
+          // Document MXD updated
+          if (in_array(DOCUMENT_CMODEL, $rels['fedora-model:hasModel']) && $parameters['dsID'] == 'MXD') {
             
           }
         }
