@@ -222,15 +222,27 @@ function dtu_conf_validate($form, &$form_state) {
       
       if (is_numeric($from_explode[0]) && strlen($from_explode[0]) == 4) {
         $form_state['values']['PrimaryInformation']['DateParent']['Year'] = $from_explode[0];
-        $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'] = $from_explode[2] . '-' . $from_explode[1] . '-' . $from_explode[0];
+        if ($form_state['values']['PrimaryInformation']['DateParent']['StartTime']) {
+          $start_time = 'T' . $form_state['values']['PrimaryInformation']['DateParent']['StartTime'];
+        }
+        else {
+          $start_time = '';
+        }
+        $form_state['values']['PrimaryInformation']['DateParent']['DateFrom'] = $from_explode[2] . '-' . $from_explode[1] . '-' . $from_explode[0] . $start_time;
       }
     }
     
     // reformat to dd-mm-yyyy
     $to = $form_state['values']['PrimaryInformation']['DateParent']['DateTo'];
     $to_explode = explode('-', $to);
+    if ($form_state['values']['PrimaryInformation']['DateParent']['EndTime']) {
+      $end_time = 'T' . $form_state['values']['PrimaryInformation']['DateParent']['EndTime'];
+    }
+    else {
+      $end_time = '';
+    }
     if (!empty($to) && strlen($to_explode[0]) == 4) {
-      $form_state['values']['PrimaryInformation']['DateParent']['DateTo'] = $to_explode[2] . '-' . $to_explode[1] . '-' . $to_explode[0];
+      $form_state['values']['PrimaryInformation']['DateParent']['DateTo'] = $to_explode[2] . '-' . $to_explode[1] . '-' . $to_explode[0] . $end_time;
     }
   }
 
