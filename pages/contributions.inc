@@ -29,7 +29,7 @@ function dtu_contribution_list($pid) {
     $session = (string) $session[0];
     
     $edit_link = l(t('Edit'), 'fedora/repository/' . $contribution['pid'], array('query' => array('add_tab' => 'true'), 'fragment' => 'tabset-1-tab-2'));
-    $delete_link = l(t('Delete'), 'admin/contribution/' . $contribution['pid'] . '/delete');
+    $delete_link = l(t('Delete'), 'admin/contribution/' . $contribution['pid'] . '/delete', array('query' => array('destination' => '/admin/conference/list')));
     
     $obj_link = l($item->objectProfile->objLabel, 'fedora/repository/' . $contribution['pid']);
     
@@ -69,11 +69,27 @@ function dtu_contribution_list($pid) {
 }
 
 function dtu_contribution_delete_form($form_state, $pid) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  $item = new Fedora_Item($pid);
   
+  $form = array();
+  
+  $form['pid'] = array(
+    '#type' => 'value',
+    '#value' => $pid,
+  );
+  
+  return confirm_form($form, t('Delete contribution:') . ' ' . $item->objectProfile->objLabel, '/admin/conference/list', t('This will delete the conference and its related documents.'), t('Delete'), t('Cancel'));  
 }
 
 function dtu_contribution_delete_form_submit($form, &$form_state) {
-  
+  if (user_access('delete contribution')) {
+    dtu_delete_contribution($form_state['values']['pid'], TRUE);
+    drupal_set_message(t('Contribution deleted'));
+  }
+  else {
+    drupal_set_message(t('Permission denied'));
+  }
 }
 
 function dtu_get_contribution_collection($pid) {

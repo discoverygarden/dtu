@@ -132,6 +132,7 @@ function dtu_perm() {
     'administer conferences',
     'administer contributions',
     'delete conference',
+    'delete contribution',
   );
 }
 
@@ -466,9 +467,20 @@ function dtu_delete_conference($pid, $delete_tree = TRUE, $delete_conf = TRUE) {
   }
 }
 
-function dtu_delete_contribution($pid) {
-  // Delete contribution
+function dtu_delete_contribution($pid, $delete_tree = FALSE) {
   $item = new Fedora_Item($pid);
+  if ($delete_tree) {
+    $mxe = $item->get_datastream_dissemination('MXE');
+    $mxe_xml = simplexml_load_string($mxe);
+    $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
+    $documents = $mxe_xml->xpath('//mxe:documents/mxe:document');
+    foreach ($documents AS $document) {
+      dtu_delete_document($document->attributes()->id);
+    }
+  }
+
+  // Delete contribution
+
   $item->purge('Purged via dtu module');
   drupal_set_message('Item purged: ' . $item->objectProfile->objLabel);
 }
@@ -490,8 +502,9 @@ function dtu_get_contribution_documents($pid) {
     and \$object <info:fedora/fedora-system:def/relations-external#isMemberOfCollection> <info:fedora/$pid>
     and \$object <fedora-model:hasModel> <info:fedora/" . DOCUMENT_CMODEL . ">
     order by \$object";
-  $object_info = dtu_object_pid_query($query_string);
 
+  $object_info = dtu_object_pid_query($query_string);
+  
   return $object_info;
 }
 
@@ -503,7 +516,6 @@ function dtu_object_pid_query($query_string) {
   $content = do_curl($url);
 
   $results = simplexml_load_string($content);
-
   $object_info = array();
   foreach ($results->results->result AS $result) {
     $pid = (string) $result->object['uri'][0];
