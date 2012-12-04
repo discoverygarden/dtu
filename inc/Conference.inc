@@ -63,7 +63,7 @@ class Conference {
     $collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
-        <content_model dsid="ISLANDORACM" name="Contribution CModel" namespace="default:1" pid="' . CONTRIBUTION_CMODEL . '"></content_model>
+        <content_model dsid="ISLANDORACM" name="Contribution CModel" namespace="dtu:1" pid="' . CONTRIBUTION_CMODEL . '"></content_model>
       </content_models>
       <search_terms></search_terms>
       <staging_area></staging_area>
@@ -93,7 +93,7 @@ class Conference {
     $document_collection_policy = '<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
       <content_models>
         <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"></content_model>
-        <content_model dsid="ISLANDORACM" name="Document CModel" namespace="default:1" pid="' . DOCUMENT_CMODEL . '"></content_model>
+        <content_model dsid="ISLANDORACM" name="Document CModel" namespace="dtu:1" pid="' . DOCUMENT_CMODEL . '"></content_model>
       </content_models>
       <search_terms></search_terms>
       <staging_area></staging_area>
