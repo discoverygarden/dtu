@@ -22,7 +22,7 @@ function dtu_init() {
   // Include javascript for datatables (UI improvements for conference and contribution lists)
   drupal_add_js(drupal_get_path('module', 'dtu') . '/datatable/media/js/jquery.dataTables.min.js');
   drupal_add_js(drupal_get_path('module', 'dtu') . '/js/dtu.js');
-  drupal_add_css(drupal_get_path('module', 'dtu') . '/datatable/media/css/jquery.dataTables.css');
+  drupal_add_css(drupal_get_path('module', 'dtu') . '/datatable/media/css/jquery.dataTables_themeroller.css');
   
   if (isset($_GET['conference'])) {
     $_SESSION['conference'] = $_GET['conference'];
