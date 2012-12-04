@@ -35,6 +35,12 @@ function dtu_init() {
   if (isset($_GET['contribution'])) {
     $_SESSION['contribution'] = $_GET['contribution'];
   }
+
+  // Change theme if using ingest form
+  if (isset($_POST['form_id']) && $_POST['form_id'] == 'fedora_repository_ingest_form') {
+    global $custom_theme;
+    $custom_theme = 'garland';
+  }
 }
 
 /**
