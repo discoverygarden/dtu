@@ -145,15 +145,21 @@ function dtu_perm() {
 function dtu_block($op, $delta = 0, $edit = array()) {
   switch ($op) {
     case 'list':
-      $block[0]['info'] = t('Conference List');
+      $block['conf_list']['info'] = t('Conference List');
+      $block['conf_admin']['info'] = t('Conference Admin');
       return $block;
     case 'view':
       switch ($delta) {
-        case 0:
+        case 'conf_list':
           module_load_include('inc', 'dtu', 'inc/conference_list');
           $block['subject'] = t('Conference List');
           $block['content'] = dtu_render_conference_block();
-          break;
+          break; 
+        case 'conf_admin':
+          module_load_include('inc', 'dtu', 'inc/conference_admin');
+          $block['subject'] = t('Conference Admin');
+          $block['content'] = dtu_render_conference_admin();
+          break; 
       }
       return $block;
   }
