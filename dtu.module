@@ -37,7 +37,7 @@ function dtu_init() {
   }
 
   // Change theme if using ingest form
-  if (isset($_POST['form_id']) && $_POST['form_id'] == 'fedora_repository_ingest_form') {
+  if ((isset($_POST['form_id']) && $_POST['form_id'] == 'fedora_repository_ingest_form') || isset($_GET['add_tab'])) {
     global $custom_theme;
     $custom_theme = 'garland';
   }
