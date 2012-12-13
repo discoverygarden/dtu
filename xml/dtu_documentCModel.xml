@@ -74,7 +74,7 @@ xsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/
   <datastreams>
     <datastream dsid="DC"></datastream>
     <datastream dsid="MODS"></datastream>
-    <datastream dsid="DDF"></datastream>
+    <datastream dsid="MXD"></datastream>
     <datastream dsid="RELS-EXT"></datastream>
     <datastream dsid="OBJ"></datastream>
   </datastreams>
