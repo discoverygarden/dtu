@@ -670,3 +670,19 @@ function dtu_get_conference_url($conf_id) {
   $conf_url = db_result(db_query("SELECT base_url FROM {dtu_multisite} WHERE pid = '%s'", $conf_id));
   return $conf_url;
 }
+
+function dtu_islandora_doi_post_mint($pid, $doi) {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  $item = new Fedora_Item($pid);
+  $mxe = $item->get_datastream_dissemination('MXE');
+  $mxe_xml = new SimpleXMLElement($mxe);
+  $mxe_xml->registerXPathNamespace('mxe', 'http://mx.dtic.dk/ns/mxe_draft');
+
+  $id = $mxe_xml->xpath('/mxe:id[@type="doi"]');
+  if (empty($id)) {
+    $id = $mxe_xml->addChild('id');
+    $id->addAttribute('type', 'doi');
+  }
+  $id[0] = $doi;
+  $item->modify_datastream_by_value($mxe_xml->asXML(), 'MXE', 'MXE', 'text/xml');
+}
