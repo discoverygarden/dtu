@@ -37,15 +37,15 @@
             <br/>
             <br/>
 
-            <span style="font-style: italic;"><xsl:text>Conference</xsl:text></span>
-            <xsl:value-of select="$delineator"/>
-            <span>
-                <xsl:if test='//mxe:super_events/mxe:super_event[@event_type="conference"]/mxe:title/mxe:short'>
+            <xsl:if test='//mxe:super_events/mxe:super_event[@event_type="conference"]/mxe:title/mxe:short'>
+                <span style="font-style: italic;"><xsl:text>Conference</xsl:text></span>
+                <xsl:value-of select="$delineator"/>
+                <span>
                     <xsl:value-of select='//mxe:super_events/mxe:super_event[@event_type="conference"]/mxe:title/mxe:short'/>
                     <xsl:text> = </xsl:text>
-                </xsl:if>
-                <xsl:value-of select='//mxe:super_events/mxe:super_event[@event_type="conference"]/mxe:title/mxe:main/text()'></xsl:value-of>
-            </span>
+                    <xsl:value-of select='//mxe:super_events/mxe:super_event[@event_type="conference"]/mxe:title/mxe:main/text()'></xsl:value-of>
+                </span>
+            </xsl:if>
             <br/>
 
             <xsl:if test="//mxe:date/mxe:year/text() != ''">
