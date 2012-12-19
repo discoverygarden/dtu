@@ -9,7 +9,7 @@
     <xsl:param name="delineator" select="' : '"/>
 
     <xsl:template match="/">
-        <div style="padding-top: 10px;">
+        <div style="padding-top: 10px; clear: both;">
             <span style="font-weight: bold;">
                 <xsl:value-of select="//mxe:title/mxe:original/mxe:main"/>
             </span>
@@ -24,6 +24,7 @@
                     </xsl:if>
                 </xsl:for-each>
             </span>
+            <br/>
             <span style="font-style: italic;">
                 <xsl:for-each select="//mxe:organisation">
                     <xsl:if test="mxe:name/mxe:level1 != ''">
@@ -77,32 +78,35 @@
                 <br/>
             </xsl:if>
 
-            <div style="clear:both;">
-                <span style="float:left; padding: 5px;">
-                    <label style="font-weight: bold;">Video</label>
-                    <br/>
-                    <xsl:if test="//mxe:documents/mxe:document[@role='video']/mxe:uri">
-                        <xsl:variable name="video" select="normalize-space(//mxe:documents/mxe:document[@role='video']/mxe:uri)"/>
-                        <a href="{$video}"><img src="/sites/all/modules/dtu/images/video_32.png" /></a>
-                    </xsl:if>
-                </span>
-                <span style="float:left; padding: 5px;">
-                    <label style="font-weight: bold;">Slides</label>
-                    <br/>
-                    <xsl:if test="//mxe:documents/mxe:document[@role='slides']/mxe:uri">
-                        <xsl:variable name="slides" select="normalize-space(//mxe:documents/mxe:document[@role='slides']/mxe:uri)"/>
-                        <a href="{$slides}"><img src="/sites/all/modules/dtu/images/Crystal_Clear_mimetype_pdf_32.png" /></a>
-                    </xsl:if>
-                </span>
-                <span style="float:left; padding: 5px;">
-                    <label style="font-weight: bold;">Paper</label>
-                    <br/>
-                    <xsl:if test="//mxe:documents/mxe:document[@role='paper']/mxe:uri">
-                        <xsl:variable name="paper" select="normalize-space(//mxe:documents/mxe:document[@role='paper']/mxe:uri)"/>
-                        <a href="{$paper}"><img src="/sites/all/modules/dtu/images/Crystal_Clear_mimetype_document_32.png" /></a>
-                    </xsl:if>
-                </span>
-            </div>
+            <xsl:if test="/mxe:eve[@eve_type='ecoco']">
+                <div style="clear:both;">
+                    <span style="float:left; padding: 5px;">
+                        <label style="font-weight: bold;">Video</label>
+                        <br/>
+
+                        <xsl:if test="//mxe:documents/mxe:document[@role='video']/mxe:uri">
+                            <xsl:variable name="video" select="normalize-space(//mxe:documents/mxe:document[@role='video']/mxe:uri)"/>
+                            <a href="{$video}"><img src="/sites/all/modules/dtu/images/video_32.png" /></a>
+                        </xsl:if>
+                    </span>
+                    <span style="float:left; padding: 5px;">
+                        <label style="font-weight: bold;">Slides</label>
+                        <br/>
+                        <xsl:if test="//mxe:documents/mxe:document[@role='slides']/mxe:uri">
+                            <xsl:variable name="slides" select="normalize-space(//mxe:documents/mxe:document[@role='slides']/mxe:uri)"/>
+                            <a href="{$slides}"><img src="/sites/all/modules/dtu/images/Crystal_Clear_mimetype_pdf_32.png" /></a>
+                        </xsl:if>
+                    </span>
+                    <span style="float:left; padding: 5px;">
+                        <label style="font-weight: bold;">Paper</label>
+                        <br/>
+                        <xsl:if test="//mxe:documents/mxe:document[@role='paper']/mxe:uri">
+                            <xsl:variable name="paper" select="normalize-space(//mxe:documents/mxe:document[@role='paper']/mxe:uri)"/>
+                            <a href="{$paper}"><img src="/sites/all/modules/dtu/images/Crystal_Clear_mimetype_document_32.png" /></a>
+                        </xsl:if>
+                    </span>
+                </div>
+            </xsl:if>
         </div>
     </xsl:template>
 </xsl:stylesheet>
