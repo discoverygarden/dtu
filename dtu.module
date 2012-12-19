@@ -201,6 +201,16 @@ function dtu_islandora_content_model_forms_get_transforms() {
   return $transforms;
 }
 
+function dtu_object_details_get_available_xslts() {
+  $path = drupal_get_path('module', 'dtu');
+
+  $transforms = array();
+
+  $transforms[$path . '/transforms/mxe2html.xslt'] = "mxe2html.xslt";
+
+  return $transforms;
+}
+
 function dtu_conf_validate($form, &$form_state) {
 
   // Validate person's organisation number matches an existing organisation tab
