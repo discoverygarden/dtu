@@ -9,7 +9,7 @@
     <xsl:param name="delineator" select="' : '"/>
 
     <xsl:template match="/">
-        <div style="padding-top: 10px; clear: both;">
+        <div style="padding-top: 10px; width: 960px;">
             <span style="font-weight: bold;">
                 <xsl:value-of select="//mxe:title/mxe:original/mxe:main"/>
             </span>
@@ -79,7 +79,7 @@
             </xsl:if>
 
             <xsl:if test="/mxe:eve[@eve_type='ecoco']">
-                <div style="clear:both;">
+                <div style="width: 960px; display: inline-block;">
                     <span style="float:left; padding: 5px;">
                         <label style="font-weight: bold;">Video</label>
                         <br/>
@@ -108,5 +108,6 @@
                 </div>
             </xsl:if>
         </div>
+        <br/>
     </xsl:template>
 </xsl:stylesheet>
